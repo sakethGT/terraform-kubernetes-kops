@@ -1,0 +1,76 @@
+kind: Addons
+metadata:
+  creationTimestamp: null
+  name: bootstrap
+spec:
+  addons:
+  - manifest: core.addons.k8s.io/v1.4.0.yaml
+    name: core.addons.k8s.io
+    selector:
+      k8s-addon: core.addons.k8s.io
+    version: 1.4.0
+  - id: k8s-1.6
+    kubernetesVersion: '>=1.6.0'
+    manifest: kube-dns.addons.k8s.io/k8s-1.6.yaml
+    name: kube-dns.addons.k8s.io
+    selector:
+      k8s-addon: kube-dns.addons.k8s.io
+    version: 1.14.9
+  - id: k8s-1.8
+    kubernetesVersion: '>=1.8.0'
+    manifest: rbac.addons.k8s.io/k8s-1.8.yaml
+    name: rbac.addons.k8s.io
+    selector:
+      k8s-addon: rbac.addons.k8s.io
+    version: 1.8.0
+  - manifest: limit-range.addons.k8s.io/v1.5.0.yaml
+    name: limit-range.addons.k8s.io
+    selector:
+      k8s-addon: limit-range.addons.k8s.io
+    version: 1.5.0
+  - id: k8s-1.6
+    kubernetesVersion: '>=1.6.0'
+    manifest: dns-controller.addons.k8s.io/k8s-1.6.yaml
+    name: dns-controller.addons.k8s.io
+    selector:
+      k8s-addon: dns-controller.addons.k8s.io
+    version: 1.9.1
+  - id: v1.7.0
+    kubernetesVersion: '>=1.7.0'
+    manifest: storage-aws.addons.k8s.io/v1.7.0.yaml
+    name: storage-aws.addons.k8s.io
+    selector:
+      k8s-addon: storage-aws.addons.k8s.io
+    version: 1.7.0
+  - id: k8s-1.6
+    kubernetesVersion: '>=1.6.0'
+    manifest: networking.flannel/k8s-1.6.yaml
+    name: networking.flannel
+    selector:
+      role.kubernetes.io/networking: "1"
+    version: 0.9.1-kops.2
+  - id: k8s-1.9
+    kubernetesVersion: '>=1.9.0'
+    manifest: kube-state-metrics.addons.k8s.io/k8s-1.9.yaml
+    name: kube-state-metrics.addons.k8s.io
+    version: 0.9.1-kops.3
+  - id: k8s-1.9
+    kubernetesVersion: '>=1.9.0'
+    manifest: dashboard.addons.k8s.io/k8s-1.9.yaml
+    name: dashboard.addons.k8s.io
+    version: 0.9.1-kops.3
+  - id: k8s-1.9
+    kubernetesVersion: '>=1.9.0'
+    manifest: heapster.addons.k8s.io/k8s-1.9.yaml
+    name: heapster.addons.k8s.io
+    version: 0.9.1-kops.3
+  - id: k8s-1.9
+    kubernetesVersion: '>=1.9.0'
+    manifest: autoscaler.k8s.io/k8s-1.9.yaml
+    name: autoscaler.k8s.io
+    version: 0.9.1.1
+  - id: k8s-1.9
+    kubernetesVersion: '>=1.9.0'
+    manifest: kube2iam.addons.k8s.io/k8s-1.9.yaml
+    name: kube2iam.k8s.io
+    version: 0.9.5
