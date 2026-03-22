@@ -1,3 +1,8 @@
+# IAM roles and policies for master and worker nodes.
+# Masters need broader permissions (EC2, ELB, Route53, ASG) to manage cluster
+# infrastructure. Nodes get minimal permissions scoped to their S3 paths
+# and ECR for container image pulls.
+
 data "aws_iam_policy_document" "assume_role" {
   statement {
     sid = "1"
@@ -26,9 +31,7 @@ data "aws_iam_policy_document" "masters" {
       "ec2:DescribeVolumes",
     ]
 
-    resources = [
-      "*",
-    ]
+    resources = ["*"]
   }
 
   statement {
@@ -41,9 +44,7 @@ data "aws_iam_policy_document" "masters" {
       "ec2:ModifyInstanceAttribute",
     ]
 
-    resources = [
-      "*",
-    ]
+    resources = ["*"]
   }
 
   statement {
@@ -60,17 +61,12 @@ data "aws_iam_policy_document" "masters" {
       "ec2:RevokeSecurityGroupIngress",
     ]
 
-    resources = [
-      "*",
-    ]
+    resources = ["*"]
 
     condition {
       test     = "StringEquals"
       variable = "ec2:ResourceTag/KubernetesCluster"
-
-      values = [
-        "${var.cluster_name}",
-      ]
+      values   = [var.cluster_name]
     }
   }
 
@@ -84,9 +80,7 @@ data "aws_iam_policy_document" "masters" {
       "autoscaling:GetAsgForInstance",
     ]
 
-    resources = [
-      "*",
-    ]
+    resources = ["*"]
   }
 
   statement {
@@ -98,17 +92,12 @@ data "aws_iam_policy_document" "masters" {
       "autoscaling:UpdateAutoScalingGroup",
     ]
 
-    resources = [
-      "*",
-    ]
+    resources = ["*"]
 
     condition {
       test     = "StringEquals"
       variable = "ec2:ResourceTag/KubernetesCluster"
-
-      values = [
-        "${var.cluster_name}",
-      ]
+      values   = [var.cluster_name]
     }
   }
 
@@ -134,9 +123,7 @@ data "aws_iam_policy_document" "masters" {
       "elasticloadbalancing:SetLoadBalancerPoliciesForBackendServer",
     ]
 
-    resources = [
-      "*",
-    ]
+    resources = ["*"]
   }
 
   statement {
@@ -159,9 +146,7 @@ data "aws_iam_policy_document" "masters" {
       "elasticloadbalancing:SetLoadBalancerPoliciesOfListener",
     ]
 
-    resources = [
-      "*",
-    ]
+    resources = ["*"]
   }
 
   statement {
@@ -172,9 +157,7 @@ data "aws_iam_policy_document" "masters" {
       "iam:GetServerCertificate",
     ]
 
-    resources = [
-      "*",
-    ]
+    resources = ["*"]
   }
 
   statement {
@@ -215,9 +198,7 @@ data "aws_iam_policy_document" "masters" {
       "ecr:BatchGetImage",
     ]
 
-    resources = [
-      "*",
-    ]
+    resources = ["*"]
   }
 
   statement {
@@ -227,9 +208,7 @@ data "aws_iam_policy_document" "masters" {
       "route53:ListHostedZones",
     ]
 
-    resources = [
-      "*",
-    ]
+    resources = ["*"]
   }
 
   statement {
@@ -284,9 +263,7 @@ data "aws_iam_policy_document" "nodes" {
       "ec2:DescribeRegions",
     ]
 
-    resources = [
-      "*",
-    ]
+    resources = ["*"]
   }
 
   statement {
@@ -335,22 +312,18 @@ data "aws_iam_policy_document" "nodes" {
       "ecr:BatchGetImage",
     ]
 
-    resources = [
-      "*",
-    ]
+    resources = ["*"]
   }
 
   statement {
-    sid = "ITF"
+    sid = "K8sMetricsAndAssumeRole"
 
     actions = [
       "cloudwatch:putMetricData",
       "sts:AssumeRole",
     ]
 
-    resources = [
-      "*",
-    ]
+    resources = ["*"]
   }
 
   statement {
@@ -364,9 +337,7 @@ data "aws_iam_policy_document" "nodes" {
       "autoscaling:TerminateInstanceInAutoScalingGroup",
     ]
 
-    resources = [
-      "*",
-    ]
+    resources = ["*"]
   }
 
   statement {
@@ -383,48 +354,36 @@ data "aws_iam_policy_document" "nodes" {
       "arn:aws:logs:*:*:*",
     ]
   }
-
-  statement {
-    sid = "tmpAccess"
-
-    actions = [
-      "s3:*",
-    ]
-
-    resources = [
-      "*",
-    ]
-  }
 }
 
 resource "aws_iam_instance_profile" "masters" {
   name = "masters.${var.cluster_name}"
-  role = "${aws_iam_role.masters.id}"
+  role = aws_iam_role.masters.id
 }
 
 resource "aws_iam_role" "masters" {
   name               = "masters.${var.cluster_name}"
-  assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_iam_instance_profile" "nodes" {
   name = "nodes.${var.cluster_name}"
-  role = "${aws_iam_role.nodes.id}"
+  role = aws_iam_role.nodes.id
 }
 
 resource "aws_iam_role" "nodes" {
   name               = "nodes.${var.cluster_name}"
-  assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_iam_role_policy" "masters" {
   name   = "masters.${var.cluster_name}"
-  role   = "${aws_iam_role.masters.id}"
-  policy = "${data.aws_iam_policy_document.masters.json}"
+  role   = aws_iam_role.masters.id
+  policy = data.aws_iam_policy_document.masters.json
 }
 
 resource "aws_iam_role_policy" "nodes" {
   name   = "nodes.${var.cluster_name}"
-  role   = "${aws_iam_role.nodes.id}"
-  policy = "${data.aws_iam_policy_document.nodes.json}"
+  role   = aws_iam_role.nodes.id
+  policy = data.aws_iam_policy_document.nodes.json
 }

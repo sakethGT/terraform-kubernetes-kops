@@ -1,3 +1,9 @@
+# AMI lookup for CoreOS stable.
+# Note: CoreOS Container Linux reached end-of-life in May 2020.
+# The modern successor is Flatcar Container Linux, which is a drop-in replacement
+# that maintains full compatibility with Ignition and Container Linux configs.
+# For new deployments, replace the AMI filter with Flatcar equivalents.
+
 data "aws_ami" "coreos_ami" {
   most_recent = true
 

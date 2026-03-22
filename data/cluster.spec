@@ -138,7 +138,7 @@ spec:
     podInfraContainerImage: gcr.io/google_containers/pause-amd64:3.0
     podManifestPath: /etc/kubernetes/manifests
   kubernetesApiAccess:
-  - 162.246.139.210/32
+  - 10.0.0.0/16
   kubernetesVersion: 1.9.3
   masterInternalName: api.internal.${cluster_name}
   masterKubelet:
@@ -169,7 +169,7 @@ spec:
   secretStore: s3://${config_bucket}/${cluster_name}/secrets
   serviceClusterIPRange: 100.64.0.0/13
   sshAccess:
-  - 162.246.139.210/32
+  - 10.0.0.0/16
   subnets:
   - cidr: ${private_subnet_a_cidr}
     id: ${private_subnet_a_id}

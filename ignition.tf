@@ -1,3 +1,7 @@
+# Ignition configuration for CoreOS/Flatcar Container Linux instances.
+# Handles systemd unit setup (docker, nodeup, locksmithd, update-engine)
+# and file provisioning (cluster spec, kube env, instance group spec).
+
 locals {
   install_dir = "/var/lib/toolbox/kubernetes-install"
 }
@@ -8,7 +12,7 @@ data "ignition_systemd_unit" "docker_dropin" {
 
   dropin {
     name    = "10dockeropts.conf"
-    content = "[Service]\nEnvironment=\"DOCKER_OPTS=--bip 192.169.0.1/16 --dns 169.254.169.253\""
+    content = "[Service]\nEnvironment=\"DOCKER_OPTS=--bip 192.168.0.1/16 --dns 169.254.169.253\""
   }
 }
 
@@ -24,19 +28,10 @@ data "ignition_file" "docker_1_12" {
 data "ignition_file" "updates" {
   path       = "/etc/coreos/update.conf"
   filesystem = "root"
-  mode       = "420"
+  mode       = 420
 
   content {
     content = "REBOOT_STRATEGY: off"
-  }
-}
-
-data "template_file" "masters_ig_spec" {
-  count    = 3
-  template = "${file("${path.module}/data/masters_ig_spec.tpl")}"
-
-  vars {
-    az_id = "${substr(element(var.masters_availability_zones, count.index), -1, 1)}"
   }
 }
 
@@ -45,21 +40,12 @@ data "ignition_file" "masters_ig_spec" {
 
   path       = "${local.install_dir}/ig_spec.yaml"
   filesystem = "root"
-  mode       = "600"
+  mode       = 600
 
   content {
-    content = "${element(data.template_file.masters_ig_spec.*.rendered, count.index)}"
-  }
-}
-
-data "template_file" "masters_kube_env" {
-  count    = 3
-  template = "${file("${path.module}/data/masters_kube_env.tpl")}"
-
-  vars {
-    az_id         = "${substr(element(var.masters_availability_zones, count.index), -1, 1)}"
-    config_bucket = "${var.config_bucket}"
-    cluster_name  = "${var.cluster_name}"
+    content = templatefile("${path.module}/data/masters_ig_spec.tpl", {
+      az_id = substr(element(var.masters_availability_zones, count.index), -1, 1)
+    })
   }
 }
 
@@ -68,66 +54,64 @@ data "ignition_file" "masters_kube_env" {
 
   path       = "${local.install_dir}/kube_env.yaml"
   filesystem = "root"
-  mode       = "600"
+  mode       = 600
 
   content {
-    content = "${element(data.template_file.masters_kube_env.*.rendered, count.index)}"
+    content = templatefile("${path.module}/data/masters_kube_env.tpl", {
+      az_id         = substr(element(var.masters_availability_zones, count.index), -1, 1)
+      config_bucket = var.config_bucket
+      cluster_name  = var.cluster_name
+    })
   }
 }
 
 data "ignition_file" "masters_cluster_spec" {
   path       = "${local.install_dir}/cluster_spec.yaml"
   filesystem = "root"
-  mode       = "600"
+  mode       = 600
 
   content {
-    content = "${file("${path.module}/data/masters_cluster_spec.tpl")}"
+    content = file("${path.module}/data/masters_cluster_spec.tpl")
   }
 }
 
 data "ignition_file" "nodes_cluster_spec" {
   path       = "${local.install_dir}/cluster_spec.yaml"
   filesystem = "root"
-  mode       = "600"
+  mode       = 600
 
   content {
-    content = "${file("${path.module}/data/nodes_cluster_spec.tpl")}"
-  }
-}
-
-data "template_file" "nodes_kube_env" {
-  template = "${file("${path.module}/data/nodes_kube_env.tpl")}"
-
-  vars {
-    config_bucket = "${var.config_bucket}"
-    cluster_name  = "${var.cluster_name}"
+    content = file("${path.module}/data/nodes_cluster_spec.tpl")
   }
 }
 
 data "ignition_file" "nodes_kube_env" {
   path       = "${local.install_dir}/kube_env.yaml"
   filesystem = "root"
-  mode       = "600"
+  mode       = 600
 
   content {
-    content = "${data.template_file.nodes_kube_env.rendered}"
+    content = templatefile("${path.module}/data/nodes_kube_env.tpl", {
+      config_bucket = var.config_bucket
+      cluster_name  = var.cluster_name
+    })
   }
 }
 
 data "ignition_file" "nodes_ig_spec" {
   path       = "${local.install_dir}/ig_spec.yaml"
   filesystem = "root"
-  mode       = "600"
+  mode       = 600
 
   content {
-    content = "${file("${path.module}/data/nodes_ig_spec.tpl")}"
+    content = file("${path.module}/data/nodes_ig_spec.tpl")
   }
 }
 
 data "ignition_file" "node_up" {
   path       = "${local.install_dir}/nodeup"
   filesystem = "root"
-  mode       = "700"
+  mode       = 700
 
   source {
     source       = "https://kubeupv2.s3.amazonaws.com/kops/1.9.0/linux/amd64/nodeup"

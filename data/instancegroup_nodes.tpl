@@ -1,7 +1,7 @@
 apiVersion: kops/v1alpha2
 kind: InstanceGroup
 metadata:
-  creationTimestamp: 2018-05-01T17:18:03Z
+  creationTimestamp: null
   labels:
     kops.k8s.io/cluster: ${cluster_name}
   name: nodes

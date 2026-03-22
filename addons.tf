@@ -1,5 +1,9 @@
+# Kubernetes add-ons stored in S3 and bootstrapped via the kops addon manager.
+# Includes: DNS, flannel networking, dashboard, cluster autoscaler,
+# kube-state-metrics, heapster, kube2iam, RBAC, and storage classes.
+
 locals {
-  files = [
+  addon_files = [
     "bootstrap-channel.yaml",
     "core.addons.k8s.io/v1.4.0.yaml",
     "dns-controller.addons.k8s.io/k8s-1.6.yaml",
@@ -16,25 +20,19 @@ locals {
   ]
 }
 
-resource "aws_s3_bucket_object" "addons" {
-  count = "${length(local.files)}"
+resource "aws_s3_object" "addons" {
+  count = length(local.addon_files)
 
-  bucket  = "${var.config_bucket}"
-  key     = "${var.cluster_name}/addons/${element(local.files, count.index)}"
-  content = "${file("${path.module}/addons/${element(local.files, count.index)}")}"
+  bucket  = var.config_bucket
+  key     = "${var.cluster_name}/addons/${local.addon_files[count.index]}"
+  content = file("${path.module}/addons/${local.addon_files[count.index]}")
 }
 
-data "template_file" "kube2iam" {
-  template = "${file("${path.module}/addons/kube2iam.addons.k8s.io/k8s-1.9.yaml")}"
-
-  vars {
-    aws_account_id = "${data.aws_caller_identity.current.account_id}"
-    role           = "nodes.${var.cluster_name}"
-  }
-}
-
-resource "aws_s3_bucket_object" "addons_kube2iam" {
-  bucket  = "${var.config_bucket}"
+resource "aws_s3_object" "addons_kube2iam" {
+  bucket  = var.config_bucket
   key     = "${var.cluster_name}/addons/kube2iam.addons.k8s.io/k8s-1.9.yaml"
-  content = "${data.template_file.kube2iam.rendered}"
+  content = templatefile("${path.module}/addons/kube2iam.addons.k8s.io/k8s-1.9.yaml", {
+    aws_account_id = data.aws_caller_identity.current.account_id
+    role           = "nodes.${var.cluster_name}"
+  })
 }

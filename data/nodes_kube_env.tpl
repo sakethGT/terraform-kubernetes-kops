@@ -11,7 +11,7 @@ Tags:
 - _aws
 - _networking_cni
 channels:
-- s3://ml-kops-state/coreostest.k8s.local/addons/bootstrap-channel.yaml
+- s3://${config_bucket}/${cluster_name}/addons/bootstrap-channel.yaml
 protokubeImage:
   hash: 4bbfcc6df1c1c0953bd0532113a74b7ae21e0ded
   name: protokube:1.9.0
