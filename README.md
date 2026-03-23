@@ -14,66 +14,9 @@ This codebase demonstrates deep understanding of Kubernetes internals that manag
 
 ## Architecture
 
-```mermaid
-graph TB
-    subgraph "Public Subnets (3 AZs)"
-        ELB["API Server ELB<br/>TCP:443"]
-    end
-
-    subgraph "Private Subnets - us-east-1a"
-        M1["Master 1<br/>ASG (1:1)"]
-        ETCD1_MAIN["etcd-main<br/>EBS Volume"]
-        ETCD1_EVT["etcd-events<br/>EBS Volume"]
-    end
-
-    subgraph "Private Subnets - us-east-1b"
-        M2["Master 2<br/>ASG (1:1)"]
-        ETCD2_MAIN["etcd-main<br/>EBS Volume"]
-        ETCD2_EVT["etcd-events<br/>EBS Volume"]
-    end
-
-    subgraph "Private Subnets - us-east-1c"
-        M3["Master 3<br/>ASG (1:1)"]
-        ETCD3_MAIN["etcd-main<br/>EBS Volume"]
-        ETCD3_EVT["etcd-events<br/>EBS Volume"]
-    end
-
-    subgraph "Worker Nodes"
-        ASG["Worker Node ASG<br/>min/max configurable"]
-        CA["Cluster Autoscaler"]
-    end
-
-    subgraph "S3 State Store"
-        S3["kops State Bucket<br/>cluster.spec, PKI, addons,<br/>secrets, instance groups"]
-    end
-
-    subgraph "Add-ons"
-        DASH["Dashboard"]
-        KSM["kube-state-metrics"]
-        K2I["kube2iam"]
-        FLNL["Flannel CNI"]
-        DNS["kube-dns"]
-        HEAP["Heapster"]
-    end
-
-    ELB --> M1
-    ELB --> M2
-    ELB --> M3
-
-    M1 --> ETCD1_MAIN
-    M1 --> ETCD1_EVT
-    M2 --> ETCD2_MAIN
-    M2 --> ETCD2_EVT
-    M3 --> ETCD3_MAIN
-    M3 --> ETCD3_EVT
-
-    CA --> ASG
-
-    M1 --> S3
-    M2 --> S3
-    M3 --> S3
-    ASG --> S3
-```
+<p align="center">
+  <img src="docs/architecture.svg" alt="HA Kubernetes Architecture" width="100%">
+</p>
 
 ## Features
 

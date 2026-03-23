@@ -1,0 +1,139 @@
+flowchart TD
+    %% External Entry Point
+    ELB["☁ API Server ELB\nTCP:443"]
+
+    %% Master Nodes across 3 AZs
+    subgraph AZ1["us-east-1a"]
+        M1["Master 1\nASG 1:1"]
+        ETCD1["etcd-main\netcd-events\nEBS Volumes"]
+    end
+
+    subgraph AZ2["us-east-1b"]
+        M2["Master 2\nASG 1:1"]
+        ETCD2["etcd-main\netcd-events\nEBS Volumes"]
+    end
+
+    subgraph AZ3["us-east-1c"]
+        M3["Master 3\nASG 1:1"]
+        ETCD3["etcd-main\netcd-events\nEBS Volumes"]
+    end
+
+    %% etcd cluster mesh
+    subgraph ETCD_CLUSTER["etcd Cluster"]
+        direction LR
+        EC1(("etcd\npeer"))
+        EC2(("etcd\npeer"))
+        EC3(("etcd\npeer"))
+        EC1 <--> EC2
+        EC2 <--> EC3
+        EC1 <--> EC3
+    end
+
+    %% Worker Nodes
+    subgraph WORKERS["Worker Node Auto Scaling Group"]
+        W1["Worker 1"]
+        W2["Worker 2"]
+        W3["Worker N..."]
+    end
+
+    %% Networking
+    subgraph NET["Networking Layer"]
+        FLANNEL["Flannel CNI\nVXLAN Overlay"]
+    end
+
+    %% Add-ons
+    subgraph ADDONS["Kubernetes Add-ons"]
+        DASH["kube-dashboard"]
+        KSM["kube-state-metrics"]
+        CA["cluster-autoscaler"]
+        K2I["kube2iam"]
+        HEAP["heapster"]
+    end
+
+    %% AWS Services
+    subgraph AWS["AWS Services"]
+        S3["S3 State Store\ncluster.spec / PKI\nsecrets / addons"]
+        IAM_M["IAM Role\nMasters"]
+        IAM_N["IAM Role\nNodes"]
+    end
+
+    %% Connections
+    ELB --> M1
+    ELB --> M2
+    ELB --> M3
+
+    M1 --> ETCD1
+    M2 --> ETCD2
+    M3 --> ETCD3
+
+    M1 -.-> EC1
+    M2 -.-> EC2
+    M3 -.-> EC3
+
+    M1 --> WORKERS
+    M2 --> WORKERS
+    M3 --> WORKERS
+
+    FLANNEL -.- M1
+    FLANNEL -.- M2
+    FLANNEL -.- M3
+    FLANNEL -.- WORKERS
+
+    CA --> WORKERS
+    K2I -.- WORKERS
+    DASH -.- M1
+    KSM -.- M1
+    HEAP -.- M1
+
+    M1 --> S3
+    M2 --> S3
+    M3 --> S3
+
+    IAM_M -.- M1
+    IAM_M -.- M2
+    IAM_M -.- M3
+    IAM_N -.- WORKERS
+
+    %% Styles - K8s Blue for Masters
+    style ELB fill:#ff9900,stroke:#cc7a00,color:#fff,stroke-width:2px
+    style M1 fill:#326ce5,stroke:#1a3a6e,color:#fff,stroke-width:2px
+    style M2 fill:#326ce5,stroke:#1a3a6e,color:#fff,stroke-width:2px
+    style M3 fill:#326ce5,stroke:#1a3a6e,color:#fff,stroke-width:2px
+    style ETCD1 fill:#326ce5,stroke:#1a3a6e,color:#fff,stroke-width:1px
+    style ETCD2 fill:#326ce5,stroke:#1a3a6e,color:#fff,stroke-width:1px
+    style ETCD3 fill:#326ce5,stroke:#1a3a6e,color:#fff,stroke-width:1px
+
+    %% etcd peers
+    style EC1 fill:#326ce5,stroke:#1a3a6e,color:#fff,stroke-width:2px
+    style EC2 fill:#326ce5,stroke:#1a3a6e,color:#fff,stroke-width:2px
+    style EC3 fill:#326ce5,stroke:#1a3a6e,color:#fff,stroke-width:2px
+
+    %% Workers in green
+    style W1 fill:#2ea44f,stroke:#1a7f37,color:#fff,stroke-width:2px
+    style W2 fill:#2ea44f,stroke:#1a7f37,color:#fff,stroke-width:2px
+    style W3 fill:#2ea44f,stroke:#1a7f37,color:#fff,stroke-width:2px
+
+    %% Networking in purple
+    style FLANNEL fill:#8957e5,stroke:#6e40c9,color:#fff,stroke-width:2px
+
+    %% Add-ons
+    style DASH fill:#8957e5,stroke:#6e40c9,color:#fff,stroke-width:1px
+    style KSM fill:#8957e5,stroke:#6e40c9,color:#fff,stroke-width:1px
+    style CA fill:#8957e5,stroke:#6e40c9,color:#fff,stroke-width:1px
+    style K2I fill:#8957e5,stroke:#6e40c9,color:#fff,stroke-width:1px
+    style HEAP fill:#8957e5,stroke:#6e40c9,color:#fff,stroke-width:1px
+
+    %% AWS Services in orange
+    style S3 fill:#ff9900,stroke:#cc7a00,color:#fff,stroke-width:2px
+    style IAM_M fill:#ff9900,stroke:#cc7a00,color:#fff,stroke-width:2px
+    style IAM_N fill:#ff9900,stroke:#cc7a00,color:#fff,stroke-width:2px
+
+    %% Subgraph styles
+    style AZ1 fill:#161b22,stroke:#30363d,color:#c9d1d9
+    style AZ2 fill:#161b22,stroke:#30363d,color:#c9d1d9
+    style AZ3 fill:#161b22,stroke:#30363d,color:#c9d1d9
+    style ETCD_CLUSTER fill:#161b22,stroke:#30363d,color:#c9d1d9
+    style WORKERS fill:#161b22,stroke:#30363d,color:#c9d1d9
+    style NET fill:#161b22,stroke:#30363d,color:#c9d1d9
+    style ADDONS fill:#161b22,stroke:#30363d,color:#c9d1d9
+    style AWS fill:#161b22,stroke:#30363d,color:#c9d1d9
