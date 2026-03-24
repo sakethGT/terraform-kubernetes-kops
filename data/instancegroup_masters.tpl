@@ -9,4 +9,4 @@ spec:
     kops.k8s.io/instancegroup: master-us-east-1${az_id}
   role: Master
   subnets:
-  - us-east-1{az_id}
+  - us-east-1${az_id}
